@@ -98,8 +98,8 @@ prey_data <- subset(prey_data,prey_data$Number>=1) #removing rows with values le
 #filtering out rarely-consumed prey and those difficult to quantify
 table(prey_data$Prey_group)
 prey_data <- subset(prey_data,prey_data$Prey_group!="unid."& prey_data$Prey_group!="Parasitic Worm" & 
-                        prey_data$Prey_group!="Jelly" & prey_data$Prey_group!="Octopus" & prey_data$Prey_group!="Squid" & 
-                        prey_data$Prey_group!="Unid. Crustacean")
+                      prey_data$Prey_group!="Jelly" & prey_data$Prey_group!="Octopus" & prey_data$Prey_group!="Squid" & 
+                      prey_data$Prey_group!="Unid. Crustacean")
 
 #separating themisto and other amphipods into different groups
 prey_data$Prey_group[which(prey_data$Best_guess_group=="Themisto")] <- "Themisto"
@@ -241,6 +241,8 @@ clust_results$size_class <- as.factor(clust_results$size_class)
 #run cluster dentification
 clust_IRI <- hclust(dissim_IRI_bray,method = "complete",members = clust_results$size_class)
 
+clust_IRI$labels <- str_replace(wide_data_IRI$sp_size_class, pattern = "_Size_class_", replacement = " ")
+
 #plot dendogram
 plot(clust_IRI)
 
@@ -248,27 +250,29 @@ plot(clust_IRI)
 h_seq <- seq(0.1,0.9,0.01)
 frame <- as.data.frame(h_seq)
 frame$index <- NA
+
 for(i in 1:length(h_seq)){
   groups <- cutree(clust_IRI,h=frame$h_seq[i])
   frame$index[i] <- dunn(dissim_IRI_bray,groups)
 }
 plot(frame$h_seq, frame$index)
-#need to choose a suitable dissimilarity. The highest levels are naturally at the lowest dissimilarity
-#I need to find the right balance between the validity of the cluster and the ecological interpretability of the clusters
+
 #plotting the dendogram with lines at different dissimilarity levels:
+
 plot(clust_IRI)
-abline(a=0.3,b=0,col="orange")
-abline(a=0.35,b=0,col="blue")
-abline(a=0.4,b=0,col="red")
-abline(a=0.45,b=0,col="green")
-abline(a=0.5,b=0,col="black")
+abline(a=0.5,b=0,col="black",lwd=2)
+abline(a=0.6,b=0,col="black",lty="dashed",lwd=2)
+abline(a=0.4,b=0,col="black",lty="dashed",lwd=2)
+
 #values below approximately 0.45 split the two PGE size classes into separate clusters. 
 #This is because they show differences in the proportion of mysids versus other shrimps in their diets.
 #For our purposes, this distinction is not necessary
+
 #Values below 0.48 split the group of largely fish feeders into two (one with 3 individuals (larger NOR and largest SSI, the other with smaller NOR and larger NOS). 
 #This is because the latter have a slightly lower proportion of fish and a larger proportion of “other amphipods” in their diets.
 #Otherwise they have quite similar diets to the other fish feeders. 
 #We have selected a cutoff of 0.5 as this retains the most general, and ecologically interpretable, groupings.
+
 groups <- cutree(clust_IRI,h=0.5)
 clust_results$cluster <- groups
 
@@ -1003,5 +1007,4 @@ ggplot(partial_model,aes(x=predator_mass_log10,y=fit))+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),axis.text = element_text(size=26,colour="black"),axis.title.x = element_text(size=30),
         axis.title.y = element_text(size=30,vjust=1.5),legend.position = "bottom",legend.title = element_text(size=27),legend.text = element_text(size=24),legend.spacing.y = unit(0.2, 'cm'))+
   labs(x="Predator mass (log10 g)",y="Prey mass (log10 g)")+scale_x_continuous(limits=c(1,4))+guides(colour = guide_legend(nrow = 3,override.aes=list(fill=NA)))
-
 
